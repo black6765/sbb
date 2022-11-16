@@ -43,18 +43,29 @@ public class QuestionController {
         return "question_detail";
     }
 
-    @PreAuthorize("isAuthenticated()")
     @PostMapping("/create")
     public String questionCreate(@Valid QuestionForm questionForm, BindingResult bindingResult, Principal principal) {
         if (bindingResult.hasErrors()) {
             return "question_form";
         }
-        SiteUser siteUser = this.userService.getUser(principal.getName());
+
+        SiteUser siteUser;
+
+        if (principal == null) {
+            try {
+                this.userService.getUser("익명");
+            } catch (Exception e) {
+                userService.create("익명", "Anony@user", "1234");
+            }
+            siteUser = this.userService.getUser("익명");
+        } else {
+            siteUser = this.userService.getUser(principal.getName());
+        }
+
         this.questionService.create(questionForm.getSubject(), questionForm.getContent(), siteUser);
         return "redirect:/question/list";
     }
 
-    @PreAuthorize("isAuthenticated()")
     @GetMapping("/create")
     public String questionCreate(QuestionForm questionForm) {
         return "question_form";

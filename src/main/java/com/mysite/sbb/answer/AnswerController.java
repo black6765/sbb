@@ -28,12 +28,24 @@ public class AnswerController {
     private final AnswerService answerService;
     private final UserService userService;
 
-    @PreAuthorize("isAuthenticated()")
     @PostMapping("/create/{id}")
     public String createAnswer(Model model, @PathVariable("id") Integer id,
                                @Valid AnswerForm answerForm, BindingResult bindingResult, Principal principal) {
         Question question = this.questionService.getQuestion(id);
-        SiteUser siteUser = this.userService.getUser(principal.getName());
+
+        SiteUser siteUser;
+
+        if (principal == null) {
+            try {
+                this.userService.getUser("익명");
+            } catch (Exception e) {
+                userService.create("익명", "Anony@user", "1234");
+            }
+            siteUser = this.userService.getUser("익명");
+        } else {
+            siteUser = this.userService.getUser(principal.getName());
+        }
+
         if (bindingResult.hasErrors()) {
             model.addAttribute("question", question);
             return "question_detail";
